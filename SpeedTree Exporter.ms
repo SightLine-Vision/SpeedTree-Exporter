@@ -2,7 +2,7 @@
 [INFO]
 
 NAME = SpeedTree Exporter
-VERSION = 1.1.6
+VERSION = 1.1.8
 AUTHOR = MastaMan
 DEV = SightLine Vision
 HELP = 
@@ -92,6 +92,10 @@ objects=
 
 * Increace maximum value fot Object Scale to 9999=
 
+[1.1.8]
+
++ Added: Support Unreal Engine=
+
 [ABOUT]
 
 This script helps export "SpeedTrees" boxes=
@@ -141,7 +145,7 @@ fn parseToLine m =
 
 
 try(closeRolloutFloater rSpeedTreeTools)catch()
-global rSpeedTreeTools = newRolloutFloater "SpeedTree Exporter" 250 870
+global rSpeedTreeTools = newRolloutFloater "SpeedTree Exporter" 250 910
 
 global settingsFile = ""	
 global szFolder = ""
@@ -1041,11 +1045,16 @@ rollout rRandomTransform "Random Transform Selected" width:236 height:534
 
 rollout rExport "Export" width:236 height:231
 (
-	radiobuttons rdoExport "" pos:[15,25] width:120 height:80 labels:#("All", "Geometry", "Particles", "Checked in list", "Selected in Viewport (Only placed)")
-	button btnExport "Export" pos:[8,146] width:220 height:38
-	label lblStatus "" pos:[7,190] width:210 height:18
-	checkbox chkSaveAs "Use SaveAs Dialog" pos:[8,119] width:132 height:22
-	GroupBox grp32 "Export Settings" pos:[3,3] width:230 height:105
+	group "Export Settings"
+	(
+		radiobuttons rdoExport "" labels:#("All", "Geometry", "Particles", "Checked in list", "Selected in Viewport (Only placed)") align: #left columns: 1
+		
+		radiobuttons rdoExportFor  "" labels:#("Neo", "Unreal Engine") offset: [0, 20] align: #left columns: 1
+	)
+	checkbox chkSaveAs "Use SaveAs Dialog" width:132 height:22
+	button btnExport "Export" width:220 height:38
+	label lblStatus "" width:210 height:18
+	
 	
 	global szExportData = ""
 	
@@ -1074,11 +1083,15 @@ rollout rExport "Export" width:236 height:231
 			return 0
 		)
 		
-		szOutputFile = szFolder + "\\trees.stf"
+		szOutputFile = ""
+		
+		if(rdoExportFor.state == 1) do szOutputFile = szFolder + "\\trees.stf"
+		if(rdoExportFor.state == 2) do szOutputFile = szFolder + "\\trees.ustf"
 
 		if(chkSaveAs.checked == true) then
 		(
-			szOutputFile = getSaveFileName caption:"Save to:" filename: szOutputFile types:"stf (*.stf) |*.stf|All|*.*|"	
+			if(rdoExportFor.state == 1) do szOutputFile = getSaveFileName caption:"Save to:" filename: szOutputFile types:"stf (*.stf) |*.stf|All|*.*|"	
+			if(rdoExportFor.state == 2) do szOutputFile = getSaveFileName caption:"Save to:" filename: szOutputFile types:"ustf (*.ustf) |*.ustf|All|*.*|"	
 		)
 		
 		if(isCheckOutFile szOutputFile == false) do return 0
@@ -1105,7 +1118,7 @@ rollout rExport "Export" width:236 height:231
 			
 			iCount = 0	
 			
-			n = (filenameFromPath i) as string
+			n =filenameFromPath i
 			o = execute("$'" +  n + "'*") as array
 			
 			ObjectData = for l in o where classOf l == Box or classOf l == Editable_Poly collect l
@@ -1121,8 +1134,10 @@ rollout rExport "Export" width:236 height:231
 				
 				gScale = floor(100 * k.scale.z) / 100
 				r = k.rotation.z_rotation
-				
-				s = "	" + k.pos.x as string + " " + k.pos.y as string + " " + k.pos.z as string + " " + r as string + " " + gScale as string + "\n"
+				s = ""
+				if(rdoExportFor.state == 1) do s = "	" + k.pos.x as string + " " + k.pos.y as string + " " + k.pos.z as string + " " + r as string + " " + gScale as string + "\n"
+				if(rdoExportFor.state == 2) do s = (getFilenameFile n) + "_" + iCount as string + "=" + k.pos.x as string + " " + k.pos.y as string + " " + k.pos.z as string + " @ " + r as string + " @ " + gScale as string + "\n"
+								
 				append szData s
 			)							
 				
@@ -1150,13 +1165,15 @@ rollout rExport "Export" width:236 height:231
 					q = k.particlePosition
 									
 					randomScale = random scaleMin scaleMax
+					s = ""
+					if(rdoExportFor.state == 1) do s =  "	" + q.x as string + " " + q.y as string + " " + q.z as string + " " + (random 0.0 360.0) as string + " " + randomScale as string + "\n"
+					if(rdoExportFor.state == 2) do s =  (getFilenameFile n) + "_" + iCount as string + "=" + q.x as string + " " + q.y as string + " " + q.z as string + " @ " + (random 0.0 360.0) as string + " @ " + randomScale as string + "\n"
 					
-					s =  "	" + q.x as string + " " + q.y as string + " " + q.z as string + " " + (random 0.0 360.0) as string + " " + randomScale as string + "\n"
 					append szData s
 				)					
 			)
 
-			if(iCount != 0) do
+			if(iCount != 0 and rdoExportFor.state == 1) do
 			(
 				s = n + "\n"
 				append szExportData s
@@ -1165,6 +1182,15 @@ rollout rExport "Export" width:236 height:231
 				append szExportData szData
 				s = "\n" + "\n"
 				append szExportData s							
+			)
+			
+			if(iCount != 0 and rdoExportFor.state == 2) do
+			(
+				s = "[" +  (getFilenameFile n) + "]\n"
+				append szExportData s
+				append szExportData szData
+				s = "\n" + "\n"
+				append szExportData s		
 			)
 			
 			j += 1
@@ -1212,6 +1238,10 @@ rollout rExport "Export" width:236 height:231
 		if(s == undefined or s == 0) do s = 1
 		rdoExport.state = s
 		
+		s = useSettings "EXPORTFOR" "int" 0
+		if(s == undefined or s == 0) do s = 1
+		rdoExportFor.state = s
+		
 		s = useSettings "SAVEASDIALOG" "bool" 0
 		chkSaveAs.checked = s			
 	)
@@ -1219,6 +1249,12 @@ rollout rExport "Export" width:236 height:231
 	(
 		useSettings "EXPORTTYPE" x 1
 	)
+	
+	on rdoExportFor changed x do
+	(
+		useSettings "EXPORTFOR" x 1
+	)
+	
 	on rExport rolledUp x do
 	(
 		rProject.lbxList.Update()
