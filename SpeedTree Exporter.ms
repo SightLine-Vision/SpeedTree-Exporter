@@ -1086,7 +1086,12 @@ rollout rExport "Export" width:236 height:231
 		szOutputFile = ""
 		
 		if(rdoExportFor.state == 1) do szOutputFile = szFolder + "\\trees.stf"
-		if(rdoExportFor.state == 2) do szOutputFile = szFolder + "\\trees.ustf"
+		if(rdoExportFor.state == 2) do 
+		(	
+			tmp = @"c:\temp\"
+			makeDir tmp
+			szOutputFile = tmp + "trees.ustf"
+		)
 
 		if(chkSaveAs.checked == true) then
 		(
