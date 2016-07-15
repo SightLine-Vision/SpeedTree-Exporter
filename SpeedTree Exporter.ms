@@ -190,7 +190,7 @@ fn useSettings k p w =
 fn warningMessage n =
 (
 	szWarnings = #()
-	szWarnings[1] = "Please select \"Export\" folder!"
+	szWarnings[1] = "Please select \"Speed Tree\" folder!"
 	szWarnings[2] = "Wrong folder!\n*.max file and *.srt files should belong to same project!"
 	szWarnings[3] = "Select project folder first!"
 	szWarnings[4] = "Please select one type of tree in list!"
@@ -256,16 +256,28 @@ fn fwdSelect =
 
 rollout rProject "Speed Tree" width:250 height:555
 (
-	dotNetControl lbxList "system.windows.forms.listView" pos:[1,128] width:234 height:310
-	button btnBrowse "Browse" pos:[7,52] width:220 height:35	
-	button btnSelect "Select" pos:[121,442] width:115 height:28
-	label lblSpeedTree "SpeedTree types: 0" pos:[5,105] width:179 height:19
-	edittext edtBrowse "" pos:[5,19] width:223 height:25 readOnly:true text: "Please select speedtree folder"
-	button btnUpdate "Update" pos:[3,442] width:115 height:28
-	GroupBox grp1 "Project" pos:[3,1] width:230 height:91			
-	button btnLink "Link" pos:[7,508] width:220 height:34
-	GroupBox grp2 "Link selected to *.srt" pos:[3,483] width:230 height:68
-	Timer tmrUpdateListView "Update ListView" pos:[0,0] width:24 height:24 interval:100 active:true
+	group "Engine"
+	(
+		radiobuttons rdoExportFor  "" labels:#("Neo", "Unreal Engine") align: #left columns: 1
+	)
+	
+	group "Project"
+	(
+		edittext edtBrowse "" width:223 height:25 readOnly:true text: "Please select speedtree folder"
+		button btnBrowse "Browse" width:220 height:35	
+	)
+	
+	label lblSpeedTree "SpeedTree types: 0" width:179 height:19 align: #left
+	dotNetControl lbxList "system.windows.forms.listView" width:234 height:310 offset:[-11, 0]
+	button btnSelect "Select"  width:100 height:28 across: 2 align: #left
+	button btnUpdate "Update" width:100 height:28 align: #right
+	
+	group "Link selected to *.srt"
+	(
+		button btnLink "Link" width:220 height:34	
+	)
+	
+	Timer tmrUpdateListView "Update ListView" width:24 height:24 interval:100 active:true
 	
 	global Clr = dotNetClass "System.Drawing.Color"	
 	
@@ -537,21 +549,15 @@ rollout rProject "Speed Tree" width:250 height:555
 	(				
 		initLbxList()
 		
-		x = compareProject()
-		
-		if(x == false) do 
-		(
-			warningMessage 2			
-			lblSpeedTree.caption = ""
-		)
-		
-		if(szFolder != "" and szFolder != undefined and x == true) do
+		if(szFolder != "" and szFolder != undefined) do
 		(			
 			hTotalObjectData = #()
 			hUnknownData = #()
 			
-			szFiles = getFiles(szFolder + "\*.srt")
-			
+			szFiles = #()
+			if(rProject.rdoExportFor.state == 1) do szFiles = getFiles(szFolder + "\*.srt")
+			if(rProject.rdoExportFor.state == 2) do szFiles = getDirectories (szFolder + "\*")
+						
 			if(szFiles.count == 0 or szFiles == undefined) then
 			(					
 				lblSpeedTree.caption = "SpeedTree folder empty!"
@@ -574,8 +580,9 @@ rollout rProject "Speed Tree" width:250 height:555
 					tmpCnt = 0
 					tmpOData = #()
 					tmpPData = #()
-								
-					n = (filenameFromPath szFiles[i]) as string
+							
+					n = trimRight szFiles[i] "\\"
+					n = (filenameFromPath n) as string
 																			
 					--o = execute("$'" +  n  + "'*") as array
 					o = for ii in geometry where matchPattern ii.name pattern:(n + "*") collect ii
@@ -644,7 +651,7 @@ rollout rProject "Speed Tree" width:250 height:555
 	(
 		i = fileProperties.findProperty #custom "SpeedTree Project"
 		if(i != 0) do szFolder = fileProperties.getPropertyValue #custom i
-				
+	
 		if(szFolder != undefined and szFolder != "") do
 		(
 				btnBrowse.caption = SelectedDir szFolder				
@@ -689,8 +696,11 @@ rollout rProject "Speed Tree" width:250 height:555
 	
 		rSpeedTreeTools.pos = [x, y]
 		
-		getFilesList()				
-				
+		s = useSettings "EXPORTFOR" "int" 0
+		if(s == undefined or s == 0) do s = 1
+		rProject.rdoExportFor.state = s
+		
+		getFilesList()						
 	)
 	on rProject close do
 	(
@@ -734,6 +744,14 @@ rollout rProject "Speed Tree" width:250 height:555
 	(				
 		z = getSelectedLbxList()
 	)
+	
+	on rdoExportFor changed x do
+	(
+		useSettings "EXPORTFOR" x 1
+		
+		getFilesList()
+	)
+	
 	on btnBrowse pressed do
 	(
 		saveWindowPos()
@@ -749,29 +767,15 @@ rollout rProject "Speed Tree" width:250 height:555
 		szFolder = getSavePath caption:"Browse"	  initialDir: szInitalDir
 		
 		if(szFolder != undefined and szFolder != "") then
-		(
-			if(findString szFolder "export" == undefined) then 
-			(
-				warningMessage 1
-			)
-			else
-			(									
-				if(compareProject() == true) then
-				(				
-					btnBrowse.caption = SelectedDir szFolder
-					useSettings "FOLDER" szFolder 1
-					edtBrowse.text = szFolder
-					try(fileProperties.addProperty #custom "SpeedTree Project" szFolder) catch()
-								
-					getList()
-				
-					try(lbxList.Items.Item[0].Selected =  true)catch()
-				)
-				else
-				(
-					warningMessage 2
-				)
-			)
+		(												
+			btnBrowse.caption = SelectedDir szFolder
+			useSettings "FOLDER" szFolder 1
+			edtBrowse.text = szFolder
+			try(fileProperties.addProperty #custom "SpeedTree Project" szFolder) catch()
+						
+			getList()
+		
+			try(lbxList.Items.Item[0].Selected =  true)catch()				
 		)			
 	)
 
@@ -1047,9 +1051,7 @@ rollout rExport "Export" width:236 height:231
 (
 	group "Export Settings"
 	(
-		radiobuttons rdoExport "" labels:#("All", "Geometry", "Particles", "Checked in list", "Selected in Viewport (Only placed)") align: #left columns: 1
-		
-		radiobuttons rdoExportFor  "" labels:#("Neo", "Unreal Engine") offset: [0, 20] align: #left columns: 1
+		radiobuttons rdoExport "" labels:#("All", "Geometry", "Particles", "Checked in list", "Selected in Viewport (Only placed)") align: #left columns: 1		
 	)
 	checkbox chkSaveAs "Use SaveAs Dialog" width:132 height:22
 	button btnExport "Export" width:220 height:38
@@ -1085,18 +1087,20 @@ rollout rExport "Export" width:236 height:231
 		
 		szOutputFile = ""
 		
-		if(rdoExportFor.state == 1) do szOutputFile = szFolder + "\\trees.stf"
-		if(rdoExportFor.state == 2) do 
+		if(rProject.rdoExportFor.state == 1) do szOutputFile = szFolder + "\\trees.stf"
+		if(rProject.rdoExportFor.state == 2) do 
 		(	
 			tmp = @"c:\temp\"
 			makeDir tmp
 			szOutputFile = tmp + "trees.ustf"
+			
+			deleteFile szOutputFile
 		)
 
 		if(chkSaveAs.checked == true) then
 		(
-			if(rdoExportFor.state == 1) do szOutputFile = getSaveFileName caption:"Save to:" filename: szOutputFile types:"stf (*.stf) |*.stf|All|*.*|"	
-			if(rdoExportFor.state == 2) do szOutputFile = getSaveFileName caption:"Save to:" filename: szOutputFile types:"ustf (*.ustf) |*.ustf|All|*.*|"	
+			if(rProject.rdoExportFor.state == 1) do szOutputFile = getSaveFileName caption:"Save to:" filename: szOutputFile types:"stf (*.stf) |*.stf|All|*.*|"	
+			if(rProject.rdoExportFor.state == 2) do szOutputFile = getSaveFileName caption:"Save to:" filename: szOutputFile types:"ustf (*.ustf) |*.ustf|All|*.*|"	
 		)
 		
 		if(isCheckOutFile szOutputFile == false) do return 0
@@ -1123,7 +1127,7 @@ rollout rExport "Export" width:236 height:231
 			
 			iCount = 0	
 			
-			n =filenameFromPath i
+			n = trimRight (filenameFromPath i) "\\"
 			o = execute("$'" +  n + "'*") as array
 			
 			ObjectData = for l in o where classOf l == Box or classOf l == Editable_Poly collect l
@@ -1140,8 +1144,8 @@ rollout rExport "Export" width:236 height:231
 				gScale = floor(100 * k.scale.z) / 100
 				r = k.rotation.z_rotation
 				s = ""
-				if(rdoExportFor.state == 1) do s = "	" + k.pos.x as string + " " + k.pos.y as string + " " + k.pos.z as string + " " + r as string + " " + gScale as string + "\n"
-				if(rdoExportFor.state == 2) do s = (getFilenameFile n) + "_" + iCount as string + "=" + k.pos.x as string + " " + k.pos.y as string + " " + k.pos.z as string + " @ " + r as string + " @ " + gScale as string + "\n"
+				if(rProject.rdoExportFor.state == 1) do s = "	" + k.pos.x as string + " " + k.pos.y as string + " " + k.pos.z as string + " " + r as string + " " + gScale as string + "\n"
+				if(rProject.rdoExportFor.state == 2) do s = (getFilenameFile n) + "_" + iCount as string + "=" + k.pos.x as string + " " + k.pos.y as string + " " + k.pos.z as string + " @ " + r as string + " @ " + gScale as string + "\n"
 								
 				append szData s
 			)							
@@ -1171,14 +1175,14 @@ rollout rExport "Export" width:236 height:231
 									
 					randomScale = random scaleMin scaleMax
 					s = ""
-					if(rdoExportFor.state == 1) do s =  "	" + q.x as string + " " + q.y as string + " " + q.z as string + " " + (random 0.0 360.0) as string + " " + randomScale as string + "\n"
-					if(rdoExportFor.state == 2) do s =  (getFilenameFile n) + "_" + iCount as string + "=" + q.x as string + " " + q.y as string + " " + q.z as string + " @ " + (random 0.0 360.0) as string + " @ " + randomScale as string + "\n"
+					if(rProject.rdoExportFor.state == 1) do s =  "	" + q.x as string + " " + q.y as string + " " + q.z as string + " " + (random 0.0 360.0) as string + " " + randomScale as string + "\n"
+					if(rProject.rdoExportFor.state == 2) do s =  (getFilenameFile n) + "_" + iCount as string + "=" + q.x as string + " " + q.y as string + " " + q.z as string + " @ " + (random 0.0 360.0) as string + " @ " + randomScale as string + "\n"
 					
 					append szData s
 				)					
 			)
 
-			if(iCount != 0 and rdoExportFor.state == 1) do
+			if(iCount != 0 and rProject.rdoExportFor.state == 1) do
 			(
 				s = n + "\n"
 				append szExportData s
@@ -1189,7 +1193,7 @@ rollout rExport "Export" width:236 height:231
 				append szExportData s							
 			)
 			
-			if(iCount != 0 and rdoExportFor.state == 2) do
+			if(iCount != 0 and rProject.rdoExportFor.state == 2) do
 			(
 				s = "[" +  (getFilenameFile n) + "]\n"
 				append szExportData s
@@ -1242,24 +1246,15 @@ rollout rExport "Export" width:236 height:231
 		s = useSettings "EXPORTTYPE" "int" 0
 		if(s == undefined or s == 0) do s = 1
 		rdoExport.state = s
-		
-		s = useSettings "EXPORTFOR" "int" 0
-		if(s == undefined or s == 0) do s = 1
-		rdoExportFor.state = s
-		
+				
 		s = useSettings "SAVEASDIALOG" "bool" 0
 		chkSaveAs.checked = s			
 	)
 	on rdoExport changed x do
-	(
-		useSettings "EXPORTTYPE" x 1
+	(		
+		useSettings "EXPORTTYPE" x 1				
 	)
-	
-	on rdoExportFor changed x do
-	(
-		useSettings "EXPORTFOR" x 1
-	)
-	
+		
 	on rExport rolledUp x do
 	(
 		rProject.lbxList.Update()
@@ -1267,7 +1262,7 @@ rollout rExport "Export" width:236 height:231
 	)
 	on btnExport pressed do
 	(
-		if(szFolder != "" and szFolder != undefined and findString szFolder "Export" != undefined) then
+		if(szFolder != "" and szFolder != undefined) then
 		(						
 			exportRun()			
 		)
