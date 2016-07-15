@@ -2,7 +2,7 @@
 [INFO]
 
 NAME = SpeedTree Exporter
-VERSION = 1.1.8
+VERSION = 1.2.0
 AUTHOR = MastaMan
 DEV = SightLine Vision
 HELP = 
@@ -92,14 +92,19 @@ objects=
 
 * Increace maximum value fot Object Scale to 9999=
 
-[1.1.8]
+[1.2.0]
 
-+ Added: Support Unreal Engine=
+- Removed: Compare project function=
+- Removed:  Force select "Export" folder=
+- Removed: Select Engine in Export Settings=
++ Added: Select Engine in Speed Tree Rollout=
+* Optimized: UI in Speed Tree Rollout=
+* Adopted for Unreal Importer=
 
 [ABOUT]
 
 This script helps export "SpeedTrees" boxes=
-in to *.stf file.=
+in to *.stf  for Neo and *.ustf file for Unreal Engine.=
 _______________________________________=
 Features:=
 - Show list of SpeedTree=
