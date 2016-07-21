@@ -656,7 +656,10 @@ rollout rProject "Speed Tree" width:250 height:555
 	(
 		i = fileProperties.findProperty #custom "SpeedTree Project"
 		if(i != 0) do szFolder = fileProperties.getPropertyValue #custom i
-	
+		
+		i2 = fileProperties.findProperty #custom "Used Engine"
+		if(i2 != 0) do rdoExportFor.state = fileProperties.getPropertyValue #custom i2
+		
 		if(szFolder != undefined and szFolder != "") do
 		(
 				btnBrowse.caption = SelectedDir szFolder				
@@ -784,6 +787,11 @@ rollout rProject "Speed Tree" width:250 height:555
 		)			
 	)
 
+	on rdoExportFor changed s do
+	(
+		try(fileProperties.addProperty #custom "Used Engine" (rdoExportFor.state)) catch()	
+	)
+	
 	on btnUpdate pressed do
 	(
 		getList()
