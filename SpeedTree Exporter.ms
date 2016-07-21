@@ -1150,7 +1150,7 @@ rollout rExport "Export" width:236 height:231
 				r = k.rotation.z_rotation
 				s = ""
 				if(rProject.rdoExportFor.state == 1) do s = "	" + k.pos.x as string + " " + k.pos.y as string + " " + k.pos.z as string + " " + r as string + " " + gScale as string + "\n"
-				if(rProject.rdoExportFor.state == 2) do s = (getFilenameFile n) + "_" + iCount as string + "=" + k.pos.x as string + " " + k.pos.y as string + " " + k.pos.z as string + " @ " + r as string + " @ " + gScale as string + "\n"
+				if(rProject.rdoExportFor.state == 2) do s = (getFilenameFile n) + "_" + iCount as string + "=" + (k.pos.x) as string + " " + (k.pos.y) as string + " " + (k.pos.z) as string + " @ " + r as string + " @ " + gScale as string + "\n"
 								
 				append szData s
 			)							
@@ -1181,7 +1181,7 @@ rollout rExport "Export" width:236 height:231
 					randomScale = random scaleMin scaleMax
 					s = ""
 					if(rProject.rdoExportFor.state == 1) do s =  "	" + q.x as string + " " + q.y as string + " " + q.z as string + " " + (random 0.0 360.0) as string + " " + randomScale as string + "\n"
-					if(rProject.rdoExportFor.state == 2) do s =  (getFilenameFile n) + "_" + iCount as string + "=" + q.x as string + " " + q.y as string + " " + q.z as string + " @ " + (random 0.0 360.0) as string + " @ " + randomScale as string + "\n"
+					if(rProject.rdoExportFor.state == 2) do s =  (getFilenameFile n) + "_" + iCount as string + "=" + (q.x) as string + " " + (q.y) as string + " " + (q.z) as string + " @ " + (random 0.0 360.0) as string + " @ " + randomScale as string + "\n"
 					
 					append szData s
 				)					
