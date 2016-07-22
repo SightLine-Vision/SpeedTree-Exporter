@@ -259,6 +259,8 @@ fn fwdSelect =
 	rRandomTransform.spnPosMax.enabled  = (a)
 )
 
+----------------------------------------------------------------------------------------------------------------------------
+
 rollout rProject "Speed Tree" width:250 height:555
 (
 	group "Engine"
@@ -551,7 +553,7 @@ rollout rProject "Speed Tree" width:250 height:555
 	/* BUILD LIST OF TREES */
 	
 	fn getList =
-	(				
+	(			
 		initLbxList()
 		
 		if(szFolder != "" and szFolder != undefined) do
@@ -865,6 +867,8 @@ rollout rProject "Speed Tree" width:250 height:555
 	)
 )
 
+----------------------------------------------------------------------------------------------------------------------------
+
 fn randomizeScale gScale scaleMax scaleMin =
 (
 	a = rRandomTransform.rdoAbsoluteOffset.state 
@@ -882,6 +886,7 @@ fn randomizeScale gScale scaleMax scaleMin =
 		return s
 	)
 )
+
 
 
 rollout rRandomTransform "Random Transform Selected" width:236 height:534
@@ -1333,4 +1338,4 @@ rollout rAbout "About"
 addRollout rProject rSpeedTreeTools rolledUp:false
 addRollout rRandomTransform rSpeedTreeTools rolledUp:true
 addRollout rExport rSpeedTreeTools rolledUp:false
-addRollout rAbout rSpeedTreeTools rolledUp:true
+addRollout rAbout rSpeedTreeTools rolledUp: true
