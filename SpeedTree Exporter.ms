@@ -2,7 +2,7 @@
 [INFO]
 
 NAME = SpeedTree Exporter
-VERSION = 1.2.0
+VERSION = 1.2.1
 AUTHOR = MastaMan
 DEV = SightLine Vision
 HELP = 
@@ -100,6 +100,10 @@ objects=
 + Added: Select Engine in Speed Tree Rollout=
 * Optimized: UI in Speed Tree Rollout=
 * Adopted for Unreal Importer=
+
+[1.2.1]
+
+- BugFix: Access to deleted scene objects=
 
 [ABOUT]
 
@@ -596,8 +600,8 @@ rollout rProject "Speed Tree" width:250 height:555
 					
 					DeleteOldControllers o n
 										
-					tmpOData = for l in o where classOf l == Box or classOf l == Editable_Poly collect l												
-					tmpPData = for l in o where classOf l == PF_Source collect l
+					tmpOData = for l in o where not isDeleted l and (classOf l == Box or classOf l == Editable_Poly) collect l												
+					tmpPData = for l in o where not isDeleted l and classOf l == PF_Source collect l
 															
 					if(tmpOData[1] != undefined) do 
 					(
